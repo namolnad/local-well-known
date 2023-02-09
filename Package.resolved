@@ -1,0 +1,23 @@
+{
+  "pins" : [
+    {
+      "identity" : "swift-argument-parser",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-argument-parser",
+      "state" : {
+        "revision" : "4ad606ba5d7673ea60679a61ff867cc1ff8c8e86",
+        "version" : "1.2.1"
+      }
+    },
+    {
+      "identity" : "swifter",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/namolnad/swifter",
+      "state" : {
+        "revision" : "a51ae97214d6d24e18aa9e824eea5f1f4021d171",
+        "version" : "2.0.0"
+      }
+    }
+  ],
+  "version" : 2
+}
