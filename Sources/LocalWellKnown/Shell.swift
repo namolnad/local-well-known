@@ -7,25 +7,13 @@ import Foundation
 //
 enum Shell {
     @discardableResult
-    static func runAsyncStream(_ command: String) -> AsyncThrowingStream<Data, Error> {
+    static func run(_ command: String) throws -> Data {
         let (task, pipe) = task(command)
 
-        return .init { continuation in
-            pipe.fileHandleForReading.readabilityHandler = { handle in
-                guard case let data = handle.availableData, !data.isEmpty else {
-                    continuation.finish()
-                    handle.readabilityHandler = nil
-                    return
-                }
-                continuation.yield(data)
-            }
-            do {
-                try task.run()
-            } catch {
-                continuation.finish(throwing: error)
-                pipe.fileHandleForReading.readabilityHandler = nil
-            }
-        }
+        try task.run()
+        task.waitUntilExit()
+
+        return pipe.fileHandleForReading.readDataToEndOfFile()
     }
 
     @discardableResult
@@ -48,6 +36,28 @@ enum Shell {
                 try task.run()
             } catch {
                 continuation.resume(throwing: error)
+                pipe.fileHandleForReading.readabilityHandler = nil
+            }
+        }
+    }
+
+    @discardableResult
+    static func runAsyncStream(_ command: String) -> AsyncThrowingStream<Data, Error> {
+        let (task, pipe) = task(command)
+
+        return .init { continuation in
+            pipe.fileHandleForReading.readabilityHandler = { handle in
+                guard case let data = handle.availableData, !data.isEmpty else {
+                    continuation.finish()
+                    handle.readabilityHandler = nil
+                    return
+                }
+                continuation.yield(data)
+            }
+            do {
+                try task.run()
+            } catch {
+                continuation.finish(throwing: error)
                 pipe.fileHandleForReading.readabilityHandler = nil
             }
         }

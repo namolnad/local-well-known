@@ -26,15 +26,24 @@ struct Runner: AsyncParsableCommand {
     var entitlementsFile: String?
 
     func run() async throws {
-        await cleanUp()
-
         let remoteHost = "localhost.run"
+        let sshCommand = "ssh -R 80:localhost:\(port) \(remoteHost)"
+
+        let source = handleInterrupt {
+            cleanUpSSH(command: sshCommand)
+            Self.exit(withError: ExitCode(SIGINT))
+        }
+
+        source.resume()
+
+        cleanUpSSH(command: sshCommand)
+
         try await Shell.runAsync("ssh-keygen -F \(remoteHost) || ssh-keyscan -H \(remoteHost) >> ~/.ssh/known_hosts")
 
         let decoder = JSONDecoder()
         var domain: URL?
 
-        for try await data in Shell.runAsyncStream("ssh -R 80:localhost:\(port) \(remoteHost) -- --output json") {
+        for try await data in Shell.runAsyncStream("\(sshCommand) -- --output json") {
             struct Response: Decodable { let address: URL }
             guard let response = try? decoder.decode(Response.self, from: data) else {
                 continue
@@ -62,10 +71,16 @@ struct Runner: AsyncParsableCommand {
         try server.run()
     }
 
-    func cleanUp() async {
-        // TODO: cleanup on sigint
-        do {
-            try await Shell.runAsync("pkill ssh")
-        } catch {}
+    private func cleanUpSSH(command: String) {
+        _ = try? Shell.run("ps -o pid -o command | grep -E '^\\s*\\d+ \(command)' | awk \"{print \\$1}\" | xargs kill")
+    }
+
+    private func handleInterrupt(handler: @escaping () -> Void) -> DispatchSourceSignal {
+        signal(SIGINT, SIG_IGN)
+
+        let source = DispatchSource.makeSignalSource(signal: SIGINT, queue: .main)
+        source.setEventHandler(handler: handler)
+
+        return source
     }
 }
