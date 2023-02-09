@@ -6,16 +6,6 @@ import Foundation
 //        }
 //
 enum Shell {
-//    @discardableResult
-//    static func run(_ command: String) throws -> Data {
-//        let (task, pipe) = task(command)
-//
-//        try task.run()
-//        task.waitUntilExit()
-//
-//        return pipe.fileHandleForReading.readDataToEndOfFile()
-//    }
-
     @discardableResult
     static func runAsyncStream(_ command: String) -> AsyncThrowingStream<Data, Error> {
         let (task, pipe) = task(command)

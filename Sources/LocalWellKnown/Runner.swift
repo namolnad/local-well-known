@@ -1,4 +1,5 @@
 import ArgumentParser
+import Foundation
 
 // Set up remotetunnel
 //  Option 1. check for (or install) and start ngrok, poll 127.0.0.1:4040/api/tunnels for publicUrl
@@ -34,7 +35,8 @@ struct Runner: AsyncParsableCommand {
         var domain: URL?
 
         for try await data in Shell.runAsyncStream("ssh -R 80:localhost:\(port) \(remoteHost) -- --output json") {
-            guard let response = try? decoder.decode(LocalHostRunResponse.self, from: data) else {
+            struct Response: Decodable { let address: URL }
+            guard let response = try? decoder.decode(Response.self, from: data) else {
                 continue
             }
             domain = response.address
@@ -67,65 +69,3 @@ struct Runner: AsyncParsableCommand {
         } catch {}
     }
 }
-
-import Foundation
-
-struct LocalHostRunResponse: Decodable {
-    let address: URL
-}
-
-extension Sequence {
-    func forEach(_ operation: (Element) async throws -> Void) async rethrows {
-        for element in self {
-            try await operation(element)
-        }
-    }
-//
-//    func forEach(_ operation: (Element) async -> Void) async {
-//        for element in self {
-//            await operation(element)
-//        }
-//    }
-}
-
-
-//struct NgrokResponse: Decodable {
-//    let tunnels: [Tunnel]
-//
-//    struct Tunnel: Decodable {
-//        let publicUrl: URL
-//    }
-//}
-
-//
-//        do {
-//            print(try await Shell.run("which ngrok")) // FIXME: - need to handle exit code/error so know to install
-////            for try await value in Shell.run("which ngrok", wait: true) {
-////                print(value)
-////            }
-//        } catch MyError.blah2 {
-////            for try await value in Shell.run("brew install --cask ngrok") {
-////                print(value)
-////            }
-//        }
-//
-//
-//        Task {
-//            try await Shell.run("/usr/bin/env ngrok http \(port)")
-//        }
-
-//        var url: URL?
-
-
-//        while url == nil {
-//            // May need to allow for ports other than 4040 here
-//            do {
-//                let data = try await Shell.run("/usr/bin/env curl http://127.0.0.1:4040/api/tunnels --silent --max-time 0.1")
-//                let response = try decoder.decode(NgrokResponse.self, from: data)
-//                url = response.tunnels.first?.publicUrl
-//            } catch {
-//                print(error)
-//            }
-////            url = try await Shell.run("/usr/bin/env curl http://127.0.0.1:4040/api/tunnels --silent --max-time 0.1 | jq -r '.tunnels[].public_url'", wait: true)
-//        }
-        // "/usr/bin/env curl http://127.0.0.1:#\(port)/api/tunnels --silent --max-time 0.1 | jq -r '.tunnels[].public_url'"
