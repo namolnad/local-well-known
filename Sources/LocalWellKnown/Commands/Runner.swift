@@ -4,7 +4,7 @@ import Foundation
 @main
 struct Runner: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
-        commandName: "lwk",
+        commandName: "local-well-known",
         subcommands: [
             Manual.self,
             Project.self,
