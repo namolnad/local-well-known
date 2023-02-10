@@ -1,5 +1,5 @@
 import XCTest
-@testable import lwk
+@testable import LocalWellKnown
 
 final class lwkTests: XCTestCase {
     func testExample() throws {

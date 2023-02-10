@@ -2,10 +2,9 @@ import Foundation
 import Swifter
 
 struct Server {
-    let port: UInt16
-    let appIds: [String]
+    let json: String
 
-    func run() throws {
+    func run(port: UInt16, remoteHost: String) throws {
         let server = HttpServer()
 
         server.middleware.append { request in
@@ -16,16 +15,14 @@ struct Server {
         server.notFoundHandler = { _ in .movedPermanently("https://example.com/404") }
 
         server.GET["/apple-app-site-association", "/.well-known/apple-app-site-association"] = { _ in
-            .ok(.json([
-                "applinks": ["details": [["appIDs": appIds]]],
-                "webcredentials": ["apps": appIds],
-            ]))
+            .ok(.text(json))
         }
 
         let semaphore = DispatchSemaphore(value: 0)
         do {
             try server.start(port)
-            print("Server has started on port: (\(try server.port()))")
+
+            print("Hosting apple-app-site-assocation on localhost:\(port) and \(remoteHost)")
 
             semaphore.wait()
         } catch {

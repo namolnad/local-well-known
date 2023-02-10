@@ -8,7 +8,8 @@ struct Runner: AsyncParsableCommand {
         subcommands: [
             Manual.self,
             Project.self,
-            Workspace.self
+            Workspace.self,
+            JSONFile.self
         ],
         defaultSubcommand: Manual.self
     )

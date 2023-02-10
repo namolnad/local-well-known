@@ -49,19 +49,21 @@ enum LocalWellKnown {
             print("Add \(domain) to your app's entitlements file.")
         }
 
-        let appIds: [String]
+        let json: String
 
         switch strategy {
-        case let .manual(ids):
-            appIds = ids
+        case let .manual(appIds):
+            json = makeJson(appIds: appIds)
         case let .project(file, scheme):
-            appIds = try getXcodeAppIds(strategy: "project", file: file, scheme: scheme)
+            json = makeJson(appIds: try getXcodeAppIds(strategy: "project", file: file, scheme: scheme))
         case let .workspace(file, scheme):
-            appIds = try getXcodeAppIds(strategy: "workspace", file: file, scheme: scheme)
+            json = makeJson(appIds: try getXcodeAppIds(strategy: "workspace", file: file, scheme: scheme))
+        case let .json(file):
+            json = try .init(contentsOf: URL(fileURLWithPath: file))
         }
 
-        let server = Server(port: port, appIds: appIds)
-        try server.run()
+        let server = Server(json: json)
+        try server.run(port: port, remoteHost: domain.absoluteString)
     }
 
     private static func getXcodeAppIds(strategy: String, file: String, scheme: String) throws -> [String] {
@@ -69,6 +71,10 @@ enum LocalWellKnown {
         let response = try decoder.decode(BuildSettingsResponse.self, from: data)
         guard let appId = response.appId else { throw ExitCode(1) }
         return [appId]
+    }
+
+    private static func makeJson(appIds: [String]) -> String {
+        "{\"applinks\":[\"details\":[{\"appIds\":\(appIds)}],\"webcredentials\":{\"apps\":\(appIds)}"
     }
 
     private static func cleanUpSSH(command: String) {
@@ -90,6 +96,7 @@ extension LocalWellKnown {
         case manual(appIds: [String])
         case project(file: String, scheme: String)
         case workspace(file: String, scheme: String)
+        case json(file: String)
     }
 }
 
