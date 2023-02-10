@@ -3,7 +3,7 @@ import ArgumentParser
 struct Manual: AsyncParsableCommand {
     @OptionGroup var globals: GlobalOptions
 
-    @Option var appIds: [String]
+    @Option(name: .shortAndLong, parsing: .upToNextOption) var appIds: [String]
 
     func run() async throws {
         try await LocalWellKnown.run(
