@@ -43,7 +43,7 @@ enum LocalWellKnown {
                 }
                 let addCommand = makeCommand("add", "string")
                 let setCommand = makeCommand("set", nil)
-                try await Shell.runAsync("\(addCommand) || \(setCommand)")
+                try await Shell.runAsync("\(setCommand) || \(addCommand)")
             }
         } else {
             print("Add \(domain) to your app's entitlements file.")
