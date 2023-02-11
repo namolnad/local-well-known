@@ -18,9 +18,7 @@ final class LocalWellKnownTests: XCTestCase {
         port = nil
         output = []
         tunnelHost = nil
-    }
 
-    func testManualStrategy() async throws {
         Current.shell._run = { [unowned self] command in
             self.commands.append(command)
             return .init()
@@ -39,7 +37,13 @@ final class LocalWellKnownTests: XCTestCase {
         Current.stdout._write = { [unowned self] in
             self.output.append($0)
         }
+        Current.contentsOfFile = { [unowned self] file in
+            self.file = file
+            return "{\"iamjson\":34}"
+        }
+    }
 
+    func testManualStrategy() async throws {
         try await LocalWellKnown.run(
             strategy: .manual(appIds: ["com.1234"]),
             port: 8765,
@@ -66,20 +70,6 @@ final class LocalWellKnownTests: XCTestCase {
             return command.starts(with: "xcrun xcodebuild") ?
                 try self.jsonEncoder.encode(LocalWellKnown.BuildSettingsResponse.init(actionSettings: [.init(action: "build", buildSettings: .init(teamId: "team123", bundleId: "com.bundle.example"))])) :
                 .init()
-        }
-        Current.shell.runAsyncStream = { [unowned self] command in
-            self.commands.append(command)
-            return .init {
-                try self.jsonEncoder.encode(LocalWellKnown.SSHResponse(address: URL(string: "com.blah")!))
-            }
-        }
-        Current.server.run = { [unowned self] port, tunnelHost, json in
-            self.port = port
-            self.tunnelHost = tunnelHost
-            self.json = json
-        }
-        Current.stdout._write = { [unowned self] in
-            self.output.append($0)
         }
 
         try await LocalWellKnown.run(
@@ -113,20 +103,6 @@ final class LocalWellKnownTests: XCTestCase {
                 try self.jsonEncoder.encode(LocalWellKnown.BuildSettingsResponse.init(actionSettings: [.init(action: "build", buildSettings: .init(teamId: "team123", bundleId: "com.bundle.example"))])) :
                 .init()
         }
-        Current.shell.runAsyncStream = { [unowned self] command in
-            self.commands.append(command)
-            return .init {
-                try self.jsonEncoder.encode(LocalWellKnown.SSHResponse(address: URL(string: "com.blah")!))
-            }
-        }
-        Current.server.run = { [unowned self] port, tunnelHost, json in
-            self.port = port
-            self.tunnelHost = tunnelHost
-            self.json = json
-        }
-        Current.stdout._write = { [unowned self] in
-            self.output.append($0)
-        }
 
         try await LocalWellKnown.run(
             strategy: .workspace(file: "hello.xcworkspace", scheme: "ImAScheme"),
@@ -152,29 +128,6 @@ final class LocalWellKnownTests: XCTestCase {
     }
 
     func testJsonFileStrategy() async throws {
-        Current.shell._run = { [unowned self] command in
-            self.commands.append(command)
-            return .init()
-        }
-        Current.shell.runAsyncStream = { [unowned self] command in
-            self.commands.append(command)
-            return .init {
-                try self.jsonEncoder.encode(LocalWellKnown.SSHResponse(address: URL(string: "com.blah")!))
-            }
-        }
-        Current.server.run = { [unowned self] port, tunnelHost, json in
-            self.port = port
-            self.tunnelHost = tunnelHost
-            self.json = json
-        }
-        Current.stdout._write = { [unowned self] in
-            self.output.append($0)
-        }
-        Current.contentsOfFile = { [unowned self] file in
-            self.file = file
-            return "{\"iamjson\":34}"
-        }
-
         try await LocalWellKnown.run(
             strategy: .json(file: "example.json"),
             port: 123,
