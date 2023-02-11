@@ -13,7 +13,7 @@ enum LocalWellKnown {
         let remoteHost = "localhost.run"
         let sshCommand = "ssh -R 80:localhost:\(port) \(remoteHost)"
 
-        let source = handleInterrupt {
+        let source = Current.makeInterruptHandler {
             cleanUpSSH(command: sshCommand)
             exit(SIGINT)
         }
@@ -22,11 +22,11 @@ enum LocalWellKnown {
 
         cleanUpSSH(command: sshCommand)
 
-        try await Shell.runAsync("ssh-keygen -F \(remoteHost) || ssh-keyscan -H \(remoteHost) >> ~/.ssh/known_hosts")
+        try Current.shell.run("ssh-keygen -F \(remoteHost) || ssh-keyscan -H \(remoteHost) >> ~/.ssh/known_hosts")
 
         var domain: URL?
 
-        for try await data in Shell.runAsyncStream("\(sshCommand) -- --output json") {
+        for try await data in Current.shell.runAsyncStream("\(sshCommand) -- --output json") {
             guard let response = try? decoder.decode(SSHResponse.self, from: data) else {
                 continue
             }
@@ -37,16 +37,16 @@ enum LocalWellKnown {
         guard let domain else { throw ExitCode(1) }
 
         if let entitlementsFile {
-            try await ["applinks", "webcredentials"].enumerated().forEach { index, entitlement in
+            try ["applinks", "webcredentials"].enumerated().forEach { index, entitlement in
                 let makeCommand: (String, String?) -> String = { command, type in
                     "/usr/libexec/PlistBuddy -c '\(command) :com.apple.developer.associated-domains:\(index) \(type.map { $0 + " " } ?? "")\(entitlement):\(domain)' \(entitlementsFile)"
                 }
                 let addCommand = makeCommand("add", "string")
                 let setCommand = makeCommand("set", nil)
-                try await Shell.runAsync("\(setCommand) || \(addCommand)")
+                try Current.shell.run("\(setCommand) || \(addCommand)")
             }
         } else {
-            print("Add \(domain) to your app's entitlements file.")
+            print("Add \(domain) to your app's entitlements file.", to: &Current.stdout)
         }
 
         let json: String
@@ -59,15 +59,14 @@ enum LocalWellKnown {
         case let .workspace(file, scheme):
             json = makeJson(appIds: try getXcodeAppIds(strategy: "workspace", file: file, scheme: scheme))
         case let .json(file):
-            json = try .init(contentsOf: URL(fileURLWithPath: file))
+            json = try Current.contentsOfFile(file)
         }
 
-        let server = Server(json: json)
-        try server.run(port: port, remoteHost: domain.absoluteString)
+        try Current.server.run(port, domain.absoluteString, json)
     }
 
     private static func getXcodeAppIds(strategy: String, file: String, scheme: String) throws -> [String] {
-        let data = try Shell.run("xcrun xcodebuild -quiet -showBuildSettings  -json -\(strategy) '\(file)' -scheme '\(scheme)' 2> /dev/null")
+        let data = try Current.shell.run("xcrun xcodebuild -quiet -showBuildSettings  -json -\(strategy) '\(file)' -scheme '\(scheme)' 2> /dev/null")
         let response = try decoder.decode(BuildSettingsResponse.self, from: data)
         guard let appId = response.appId else { throw ExitCode(1) }
         return [appId]
@@ -78,16 +77,9 @@ enum LocalWellKnown {
     }
 
     private static func cleanUpSSH(command: String) {
-        _ = try? Shell.run("ps -o pid -o command | grep -E '^\\s*\\d+ \(command)' | awk \"{print \\$1}\" | xargs kill")
-    }
-
-    private static func handleInterrupt(handler: @escaping () -> Void) -> DispatchSourceSignal {
-        signal(SIGINT, SIG_IGN)
-
-        let source = DispatchSource.makeSignalSource(signal: SIGINT, queue: .main)
-        source.setEventHandler(handler: handler)
-
-        return source
+        do {
+            try Current.shell.run("ps -o pid -o command | grep -E '^\\s*\\d+ \(command)' | awk \"{print \\$1}\" | xargs kill")
+        } catch {}
     }
 }
 

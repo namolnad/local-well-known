@@ -2,13 +2,19 @@ import Foundation
 import Swifter
 
 struct Server {
-    let json: String
+    var run: (UInt16, String, String) throws -> Void
 
-    func run(port: UInt16, remoteHost: String) throws {
+    func run(port: UInt16, remoteHost: String, json: String) throws {
+        try run(port, remoteHost, json)
+    }
+}
+
+extension Server {
+    static let live: Self = .init { port, remoteHost, json in
         let server = HttpServer()
 
         server.middleware.append { request in
-            print("[INFO] \(request.address ?? "unknown address") -> \(request.method) -> \(request.path)")
+            print("[INFO] \(request.address ?? "unknown address") -> \(request.method) -> \(request.path)", to: &Current.stdout)
             return nil
         }
 
@@ -22,11 +28,11 @@ struct Server {
         do {
             try server.start(port)
 
-            print("Hosting apple-app-site-assocation on localhost:\(port) and \(remoteHost)")
+            print("Hosting apple-app-site-assocation on localhost:\(port) and \(remoteHost)", to: &Current.stdout)
 
             semaphore.wait()
         } catch {
-            print("Server start error: \(error)")
+            print("Server start error: \(error)", to: &Current.stdout)
             semaphore.signal()
         }
     }
