@@ -7,5 +7,5 @@ struct StdOut: TextOutputStream {
 }
 
 extension StdOut {
-    static let live: Self = .init { print($0) }
+    static let live: Self = .init { print($0, terminator: "") }
 }
