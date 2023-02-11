@@ -90,14 +90,12 @@ extension LocalWellKnown {
         case workspace(file: String, scheme: String)
         case json(file: String)
     }
-}
 
-private extension LocalWellKnown {
-    struct SSHResponse: Decodable {
+    struct SSHResponse: Codable {
         let address: URL
     }
 
-    struct BuildSettingsResponse: Decodable {
+    struct BuildSettingsResponse: Codable {
         var appId: String? {
             actionSettings
                 .first { $0.action == "build" }
@@ -111,11 +109,15 @@ private extension LocalWellKnown {
             self.actionSettings = try .init(from: decoder)
         }
 
-        struct ActionSettings: Decodable {
+        func encode(to encoder: Encoder) throws {
+            try actionSettings.encode(to: encoder)
+        }
+
+        struct ActionSettings: Codable {
             let action: String
             let buildSettings: Settings
 
-            struct Settings: Decodable {
+            struct Settings: Codable {
                 private enum CodingKeys: String, CodingKey {
                     case teamId = "DEVELOPMENT_TEAM"
                     case bundleId = "PRODUCT_BUNDLE_IDENTIFIER"

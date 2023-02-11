@@ -3,10 +3,6 @@ import Swifter
 
 struct Server {
     var run: (UInt16, String, String) throws -> Void
-
-    func run(port: UInt16, remoteHost: String, json: String) throws {
-        try run(port, remoteHost, json)
-    }
 }
 
 extension Server {
