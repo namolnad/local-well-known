@@ -95,7 +95,7 @@ extension LocalWellKnown {
         let address: URL
     }
 
-    struct BuildSettingsResponse: Codable {
+    struct BuildSettingsResponse {
         var appId: String? {
             actionSettings
                 .first { $0.action == "build" }
@@ -103,15 +103,7 @@ extension LocalWellKnown {
                 .map { "\($0.teamId).\($0.bundleId)" }
         }
 
-        private let actionSettings: [ActionSettings]
-
-        init(from decoder: Decoder) throws {
-            self.actionSettings = try .init(from: decoder)
-        }
-
-        func encode(to encoder: Encoder) throws {
-            try actionSettings.encode(to: encoder)
-        }
+        let actionSettings: [ActionSettings]
 
         struct ActionSettings: Codable {
             let action: String
@@ -127,5 +119,15 @@ extension LocalWellKnown {
                 let bundleId: String
             }
         }
+    }
+}
+
+extension LocalWellKnown.BuildSettingsResponse: Codable {
+    init(from decoder: Decoder) throws {
+        self.actionSettings = try .init(from: decoder)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        try actionSettings.encode(to: encoder)
     }
 }
