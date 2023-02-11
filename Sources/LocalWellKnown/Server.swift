@@ -1,16 +1,10 @@
 import Foundation
 import Swifter
 
-struct ServerClient {
-    var run: (UInt16, String, String) throws -> Void
+struct Server {
+    let json: String
 
-    func run(port: UInt16, remoteHost: String, json: String) throws {
-        try run(port, remoteHost, json)
-    }
-}
-
-extension ServerClient {
-    static let live: Self = .init { port, remoteHost, json in
+    func run(port: UInt16, remoteHost: String) throws {
         let server = HttpServer()
 
         server.middleware.append { request in

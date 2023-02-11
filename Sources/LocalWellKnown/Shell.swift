@@ -1,5 +1,10 @@
 import Foundation
 
+//
+//        if throwOnError, task.terminationStatus != 0 {
+//            throw MyError.blah2
+//        }
+//
 enum Shell {
     @discardableResult
     static func run(_ command: String) throws -> Data {
