@@ -25,14 +25,18 @@ struct Runner: AsyncParsableCommand {
         }
     }
 
+    func validate() throws {
+        _ = try appIdStrategy
+    }
+
     private var appIdStrategy: LocalWellKnown.AppIdStrategy {
         get throws {
             if let jsonFile {
                 return .json(file: jsonFile)
             } else if let projectFile {
-                return .project(file: projectFile, scheme: try scheme.expected(optionName: "scheme"))
+                return .project(file: projectFile, scheme: try scheme.required(option: "scheme"))
             } else if let workspaceFile {
-                return .workspace(file: workspaceFile, scheme: try scheme.expected(optionName: "scheme"))
+                return .workspace(file: workspaceFile, scheme: try scheme.required(option: "scheme"))
             } else if !appIds.isEmpty {
                 return .manual(appIds: appIds)
             } else {
@@ -43,9 +47,9 @@ struct Runner: AsyncParsableCommand {
 }
 
 private extension Swift.Optional {
-    func expected(optionName: String) throws -> Wrapped {
+    func required(option: String) throws -> Wrapped {
         guard case let .some(wrapped) = self else {
-            throw ParserError.missingRequiredOption(option: optionName)
+            throw ParserError.missingRequiredOption(option: option)
         }
         return wrapped
     }
