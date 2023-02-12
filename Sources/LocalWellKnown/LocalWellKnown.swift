@@ -46,7 +46,7 @@ enum LocalWellKnown {
                 try Current.shell.run("\(setCommand) || \(addCommand)")
             }
         } else {
-            print("Add \(domain) to your app's entitlements file.", to: &Current.stdout)
+            Current.print("Add \(domain) to your app's entitlements file.")
         }
 
         let json: String

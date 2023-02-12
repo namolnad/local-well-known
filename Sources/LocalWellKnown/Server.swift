@@ -10,7 +10,7 @@ extension Server {
         let server = HttpServer()
 
         server.middleware.append { request in
-            print("[INFO] \(request.address ?? "unknown address") -> \(request.method) -> \(request.path)", to: &Current.stdout)
+            Current.print("[INFO] \(request.address ?? "unknown address") -> \(request.method) -> \(request.path)")
             return nil
         }
 
@@ -24,11 +24,11 @@ extension Server {
         do {
             try server.start(port)
 
-            print("Hosting apple-app-site-assocation on localhost:\(port) and \(remoteHost)", to: &Current.stdout)
+            Current.print("Hosting apple-app-site-assocation on localhost:\(port) and \(remoteHost)")
 
             semaphore.wait()
         } catch {
-            print("Server start error: \(error)", to: &Current.stdout)
+            Current.print("Server start error: \(error)")
             semaphore.signal()
         }
     }

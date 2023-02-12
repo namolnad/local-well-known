@@ -34,7 +34,7 @@ final class LocalWellKnownTests: XCTestCase {
             self.tunnelHost = tunnelHost
             self.json = json
         }
-        Current.stdout._write = { [unowned self] in
+        Current.print = { [unowned self] in
             self.output.append($0)
         }
         Current.contentsOfFile = { [unowned self] file in
@@ -58,7 +58,7 @@ final class LocalWellKnownTests: XCTestCase {
                 "ssh -R 80:localhost:8765 localhost.run -- --output json",
             ]
         )
-        XCTAssertEqual(output, ["", "Add com.blah to your app\'s entitlements file.", "\n"])
+        XCTAssertEqual(output, ["Add com.blah to your app\'s entitlements file."])
         XCTAssertEqual(port, 8765)
         XCTAssertEqual(tunnelHost, "com.blah")
         XCTAssertEqual(json, "{\"applinks\":[\"details\":[{\"appIds\":[\"com.1234\"]}],\"webcredentials\":{\"apps\":[\"com.1234\"]}")
@@ -142,7 +142,7 @@ final class LocalWellKnownTests: XCTestCase {
                 "ssh -R 80:localhost:123 localhost.run -- --output json",
             ]
         )
-        XCTAssertEqual(output, ["", "Add com.blah to your app\'s entitlements file.", "\n"])
+        XCTAssertEqual(output, ["Add com.blah to your app\'s entitlements file."])
         XCTAssertEqual(port, 123)
         XCTAssertEqual(tunnelHost, "com.blah")
         XCTAssertEqual(json, "{\"iamjson\":34}")
