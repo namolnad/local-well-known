@@ -148,4 +148,35 @@ final class LocalWellKnownTests: XCTestCase {
         XCTAssertEqual(json, "{\"iamjson\":34}")
         XCTAssertEqual(file, "example.json")
     }
+
+    func testManualStrategyParsing() throws {
+        let command = try Runner.parseAsRoot(["--app-ids", "com.1234", "blah", "--port", "8765"]) as? Runner
+        XCTAssertEqual(command?.appIds, ["com.1234", "blah"])
+        XCTAssertEqual(command?.port, 8765)
+    }
+
+    func testProjectFileStrategyParsing() throws {
+        let command = try Runner.parseAsRoot(["--project-file", "blah.xcodeproj", "--scheme", "Scheme123"]) as? Runner
+        XCTAssertEqual(command?.projectFile, "blah.xcodeproj")
+        XCTAssertEqual(command?.scheme, "Scheme123")
+        XCTAssertEqual(command?.port, 8080)
+
+        XCTAssertThrowsError(try Runner.parseAsRoot(["--project-file", "blah.xcodeproj"]))
+    }
+
+    func testWorkspaceFileStrategyParsing() throws {
+        let command = try Runner.parseAsRoot(["--workspace-file", "blah.xcworkspace", "--scheme", "Scheme123"]) as? Runner
+        XCTAssertEqual(command?.workspaceFile, "blah.xcworkspace")
+        XCTAssertEqual(command?.scheme, "Scheme123")
+        XCTAssertEqual(command?.port, 8080)
+
+        XCTAssertThrowsError(try Runner.parseAsRoot(["--workspace-file", "blah.xcworkspace"]))
+        XCTAssertThrowsError(try Runner.parseAsRoot(["--scheme", "blah.xcworkspace"]))
+    }
+
+    func testJsonFileStrategyParsing() throws {
+        let command = try Runner.parseAsRoot(["--json-file", "blah.json", "--entitlements-file", "Blah.entitlements"]) as? Runner
+        XCTAssertEqual(command?.jsonFile, "blah.json")
+        XCTAssertEqual(command?.entitlementsFile, "Blah.entitlements")
+    }
 }
