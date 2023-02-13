@@ -13,11 +13,14 @@ struct Runner: AsyncParsableCommand {
 
     @Option(name: .shortAndLong) var entitlementsFile: String?
 
+    @Flag(inversion: .prefixedNo) var autoTrustSSH: Bool = true
+
     @Option var port: UInt16 = 8080
 
     func run() async throws {
         try await LocalWellKnown.run(
             strategy: appIdStrategy,
+            autoTrustSSH: autoTrustSSH,
             port: port,
             entitlementsFile: entitlementsFile
         ) { exitCode in
@@ -40,7 +43,7 @@ struct Runner: AsyncParsableCommand {
             } else if !appIds.isEmpty {
                 return .manual(appIds: appIds)
             } else {
-                throw ParserError.missingAppIdRetrievalOptions
+                throw LocalWellKnownError.parsingMissingAppIdRetrievalOptions
             }
         }
     }
@@ -49,7 +52,7 @@ struct Runner: AsyncParsableCommand {
 private extension Swift.Optional {
     func required(option: String) throws -> Wrapped {
         guard case let .some(wrapped) = self else {
-            throw ParserError.missingRequiredOption(option: option)
+            throw LocalWellKnownError.parsingMissingRequiredOption(option: option)
         }
         return wrapped
     }

@@ -6,6 +6,7 @@ enum LocalWellKnown {
 
     static func run(
         strategy: AppIdStrategy,
+        autoTrustSSH: Bool,
         port: UInt16,
         entitlementsFile: String?,
         exit: @escaping (Int32) -> Void
@@ -22,7 +23,17 @@ enum LocalWellKnown {
 
         cleanUpSSH(command: sshCommand)
 
-        try Current.shell.run("ssh-keygen -F \(remoteHost) || ssh-keyscan -H \(remoteHost) >> ~/.ssh/known_hosts")
+        var sshTrustCommand = "ssh-keygen -F \(remoteHost)"
+
+        if autoTrustSSH {
+            sshTrustCommand += " || ssh-keyscan \(remoteHost) >> ~/.ssh/known_hosts"
+        }
+
+        do {
+            try Current.shell.run(sshTrustCommand)
+        } catch LocalWellKnownError.shellFailure {
+            throw LocalWellKnownError.sshKnownHostMissing(host: remoteHost)
+        }
 
         var domain: URL?
 
@@ -68,7 +79,7 @@ enum LocalWellKnown {
     private static func getXcodeAppIds(strategy: String, file: String, scheme: String) throws -> [String] {
         let data = try Current.shell.run("xcrun xcodebuild -quiet -showBuildSettings  -json -\(strategy) '\(file)' -scheme '\(scheme)' 2> /dev/null")
         let response = try decoder.decode(BuildSettingsResponse.self, from: data)
-        guard let appId = response.appId else { throw ExitCode(1) }
+        guard let appId = response.appId else { throw ExitCode.failure }
         return [appId]
     }
 
