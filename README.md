@@ -1,6 +1,6 @@
 # local-well-known
 
-## Table Of Contents
+## Table of Contents
 - [Usage](#usage)
 - [Overview](#overview)
 - [Installation](#installation)
@@ -10,10 +10,7 @@
 - [License](#license)
 
 ## Usage
-1. Run local-well-known from your terminal:
-```
-local-well-known --project-file MyApp.xcodeproj --scheme MyApp --entitlements-file MyApp/MyApp.entitlements # Hosting apple-app-site-assocation on localhost:8080 and 7e3110ac6095fd.lhr.life
-```
+1. Run local-well-known from your terminal: `local-well-known --project-file MyApp.xcodeproj --scheme MyApp --entitlements-file MyApp/MyApp.entitlements`
 1. Run `MyApp` from Xcode
 1. Test your Universal Links, Password Autofill, etc!
 
@@ -23,7 +20,7 @@ When utilizing Apple features such as Universal Links or Password Autofill, you 
 
 ### The solution
 local-well-known is a tool designed to streamline the process of getting a publicly-available `apple-app-site-association` file up and running, without needing to worry about pestering your backend team or deploying anything to production. There have been a number of articles written on the subject to make this process easier, but they all require you to manage updating config files (e.g. entitlements file) and additional tooling yourself (e.g. ngrok).
-Under the hood, local-well-known spins up an extremely lightweight server to locally host a very simple `apple-app-site-association` file and SSH is utilized to open up a remote tunnel to make this file publicly available. If you set the corresponding `--entitlements-file` option, your entitlements file will be updated automatically.
+Under the hood, local-well-known spins up an extremely lightweight server to locally host a very simple `apple-app-site-association` file and [SSH is utilized](https://localhost.run) to open up a remote tunnel to make this file publicly available. If you set the corresponding `--entitlements-file` option, your entitlements file will be updated automatically.
 
 ## Installation
 **Homebrew**
@@ -57,4 +54,4 @@ If you prefer to manage your ssh fingerprint trusting yourself, you can set the 
 By default, a local server will be hosted on port 8080. If this port is already in use, you can select a different port by setting the `--port` option.
 
 ## License
-local-well-known is released under the [MIT License](LICENSE.md)
+local-well-known is released under the [MIT License](LICENSE)
