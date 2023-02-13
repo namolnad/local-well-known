@@ -11,7 +11,7 @@ enum LocalWellKnownError: LocalizedError {
         case let .parsingMissingRequiredOption(option):
             return "--\(option) is required in this context"
         case .parsingMissingAppIdRetrievalOptions:
-            return "One of the following options is required: --app-ids, --project-file, --workspace-file, --json"
+            return "One of the following options is required: --project-file, --workspace-file, --app-ids, --json-file"
         case .shellFailure:
             return nil
         case let .sshKnownHostMissing(host):

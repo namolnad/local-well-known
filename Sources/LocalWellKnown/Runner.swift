@@ -5,17 +5,25 @@ import Foundation
 struct Runner: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "local-well-known")
 
-    @Option(name: .shortAndLong) var projectFile: String?
-    @Option(name: .shortAndLong) var workspaceFile: String?
-    @Option(name: .shortAndLong) var scheme: String?
-    @Option(name: .shortAndLong) var jsonFile: String?
-    @Option(name: .shortAndLong, parsing: .upToNextOption) var appIds: [String] = []
+    @Option(name: .shortAndLong, help: "When using this option in conjunction with `--scheme`, your app's id will be automatically determined.")
+    var projectFile: String?
+    @Option(name: .shortAndLong, help: "When using this option in conjunction with `--scheme`, your app's id will be automatically determined.")
+    var workspaceFile: String?
+    @Option(name: .shortAndLong, help: "When using this option in conjunction with `--project-file` or `--workspace-file`, your app's id will be automatically determined.")
+    var scheme: String?
+    @Option(name: .shortAndLong, parsing: .upToNextOption, help: "If you prefer, you can manually set the app-ids to be hosted.")
+    var appIds: [String] = []
+    @Option(name: .shortAndLong, help: "For complex apple-app-site-association files, use this option to host your custom file accordingly.")
+    var jsonFile: String?
 
-    @Option(name: .shortAndLong) var entitlementsFile: String?
+    @Option(name: .shortAndLong, help: "By setting this option, your entitlements file will be automatically updated to include the tunnel url for applinks and webcredentials.")
+    var entitlementsFile: String?
 
-    @Flag(inversion: .prefixedNo) var autoTrustSSH: Bool = true
+    @Flag(inversion: .prefixedNo, help: "If you prefer to manage ssh fingerprint trusting yourself, you can override the default setting, otherwise `ssh-keyscan` will be used to trust `localhost.run`'s SSH fingerprint.")
+    var autoTrustSSH: Bool = true
 
-    @Option var port: UInt16 = 8080
+    @Option(help: "By default the local server will be hosted on port 8080. If this port is already in use, you can select a different port by setting this option.")
+    var port: UInt16 = 8080
 
     func run() async throws {
         try await LocalWellKnown.run(
