@@ -95,7 +95,7 @@ enum LocalWellKnown {
     }
 
     private static func makeJson(appIds: [String]) -> String {
-        "{\"applinks\":[\"details\":[{\"appIds\":\(appIds)}],\"webcredentials\":{\"apps\":\(appIds)}"
+        "{\"applinks\":{\"details\":[{\"appIds\":\(appIds)}],\"webcredentials\":{\"apps\":\(appIds)}}}"
     }
 
     private static func cleanUpNgrok() {

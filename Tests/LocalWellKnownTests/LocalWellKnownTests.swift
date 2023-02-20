@@ -66,7 +66,7 @@ final class LocalWellKnownTests: XCTestCase {
         XCTAssertEqual(output, ["Add e315-47-208-216-108.ngrok.io to your app\'s entitlements file."])
         XCTAssertEqual(port, 8765)
         XCTAssertEqual(tunnelHost, "e315-47-208-216-108.ngrok.io")
-        XCTAssertEqual(json, "{\"applinks\":[\"details\":[{\"appIds\":[\"com.1234\"]}],\"webcredentials\":{\"apps\":[\"com.1234\"]}")
+        XCTAssertEqual(json, "{\"applinks\":{\"details\":[{\"appIds\":[\"com.1234\"]}],\"webcredentials\":{\"apps\":[\"com.1234\"]}}}")
     }
 
     func testProjectFileStrategy() async throws {
@@ -98,7 +98,7 @@ final class LocalWellKnownTests: XCTestCase {
         XCTAssertEqual(output, [])
         XCTAssertEqual(port, 8765)
         XCTAssertEqual(tunnelHost, "e315-47-208-216-108.ngrok.io")
-        XCTAssertEqual(json, "{\"applinks\":[\"details\":[{\"appIds\":[\"team123.com.bundle.example\"]}],\"webcredentials\":{\"apps\":[\"team123.com.bundle.example\"]}")
+        XCTAssertEqual(json, "{\"applinks\":{\"details\":[{\"appIds\":[\"team123.com.bundle.example\"]}],\"webcredentials\":{\"apps\":[\"team123.com.bundle.example\"]}}}")
     }
 
 
@@ -131,7 +131,7 @@ final class LocalWellKnownTests: XCTestCase {
         XCTAssertEqual(output, [])
         XCTAssertEqual(port, 8765)
         XCTAssertEqual(tunnelHost, "e315-47-208-216-108.ngrok.io")
-        XCTAssertEqual(json, "{\"applinks\":[\"details\":[{\"appIds\":[\"team123.com.bundle.example\"]}],\"webcredentials\":{\"apps\":[\"team123.com.bundle.example\"]}")
+        XCTAssertEqual(json, "{\"applinks\":{\"details\":[{\"appIds\":[\"team123.com.bundle.example\"]}],\"webcredentials\":{\"apps\":[\"team123.com.bundle.example\"]}}}")
     }
 
     func testJsonFileStrategy() async throws {
