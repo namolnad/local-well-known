@@ -2,50 +2,61 @@ import ArgumentParser
 import Foundation
 
 enum LocalWellKnown {
+    private static let snakeCaseDecoder = {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        return decoder
+    }()
+
     private static let decoder = JSONDecoder()
 
     static func run(
         strategy: AppIdStrategy,
-        autoTrustSSH: Bool,
         port: UInt16,
         entitlementsFile: String?,
         exit: @escaping (Int32) -> Void
     ) async throws {
-        let remoteHost = "localhost.run"
-        let sshCommand = "ssh -R 80:localhost:\(port) \(remoteHost)"
-
         let source = Current.makeInterruptHandler {
-            cleanUpSSH(command: sshCommand)
+            cleanUpNgrok()
             exit(SIGINT)
         }
 
         source.resume()
 
-        cleanUpSSH(command: sshCommand)
-
-        var sshTrustCommand = "ssh-keygen -F \(remoteHost)"
-
-        if autoTrustSSH {
-            sshTrustCommand += " || ssh-keyscan \(remoteHost) >> ~/.ssh/known_hosts"
-        }
+        cleanUpNgrok()
 
         do {
-            try Current.shell.run(sshTrustCommand)
+            try Current.shell.run("which ngrok")
         } catch LocalWellKnownError.shellFailure {
-            throw LocalWellKnownError.sshKnownHostMissing(host: remoteHost)
-        }
-
-        var domain: URL?
-
-        for try await data in Current.shell.runAsyncStream("\(sshCommand) -- --output json") {
-            guard let response = try? decoder.decode(SSHResponse.self, from: data) else {
-                continue
+            do {
+                try Current.shell.run("brew install --cask ngrok")
+            } catch {
+                throw LocalWellKnownError.ngrokInstallationFailed
             }
-            domain = response.address
-            break
         }
 
-        guard let domain else { throw ExitCode(1) }
+        _ = Current.shell.runAsyncStream("ngrok http \(port)")
+
+        var tunnelUrl: URL?
+
+        while tunnelUrl == nil {
+            for try await data in Current.shell.runAsyncStream("curl http://127.0.0.1:4040/api/tunnels --silent --max-time 0.1") {
+                guard
+                    let response = try? snakeCaseDecoder.decode(NgrokResponse.self, from: data),
+                    let url = response.tunnels.first?.publicUrl
+                else {
+                    continue
+                }
+                tunnelUrl = url
+                break
+            }
+        }
+
+        guard
+            let tunnelUrl,
+            let components = URLComponents(url: tunnelUrl, resolvingAgainstBaseURL: false),
+            let domain = components.host
+        else { throw ExitCode.failure }
 
         if let entitlementsFile {
             try ["applinks", "webcredentials", "appclips", "activitycontinuation"].enumerated().forEach { index, entitlement in
@@ -73,7 +84,7 @@ enum LocalWellKnown {
             json = try Current.contentsOfFile(file)
         }
 
-        try Current.server.run(port, domain.absoluteString, json)
+        try Current.server.run(port, domain, json)
     }
 
     private static func getXcodeAppIds(strategy: String, file: String, scheme: String) throws -> [String] {
@@ -87,9 +98,9 @@ enum LocalWellKnown {
         "{\"applinks\":{\"details\":[{\"appIds\":\(appIds)}]},\"webcredentials\":{\"apps\":\(appIds)},\"appclips\":{\"apps\":\(appIds)},\"activitycontinuation\":{\"apps\":\(appIds)}}"
     }
 
-    private static func cleanUpSSH(command: String) {
+    private static func cleanUpNgrok() {
         do {
-            try Current.shell.run("ps -o pid -o command | grep -E '^\\s*\\d+ \(command)' | awk \"{print \\$1}\" | xargs kill")
+            try Current.shell.run("pkill ngrok")
         } catch {}
     }
 }
@@ -102,8 +113,12 @@ extension LocalWellKnown {
         case json(file: String)
     }
 
-    struct SSHResponse: Codable {
-        let address: URL
+    struct NgrokResponse: Codable {
+        let tunnels: [Tunnel]
+
+        struct Tunnel: Codable {
+            let publicUrl: URL
+        }
     }
 
     struct BuildSettingsResponse {

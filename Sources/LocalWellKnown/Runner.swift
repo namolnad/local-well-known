@@ -19,16 +19,12 @@ struct Runner: AsyncParsableCommand {
     @Option(name: .shortAndLong, help: "By setting this option, your entitlements file will be automatically updated to include the tunnel url for applinks and webcredentials.")
     var entitlementsFile: String?
 
-    @Flag(inversion: .prefixedNo, help: "If you prefer to manage ssh fingerprint trusting yourself, you can override the default setting, otherwise `ssh-keyscan` will be used to trust `localhost.run`'s SSH fingerprint.")
-    var autoTrustSSH: Bool = true
-
     @Option(help: "By default the local server will be hosted on port 8080. If this port is already in use, you can select a different port by setting this option.")
     var port: UInt16 = 8080
 
     func run() async throws {
         try await LocalWellKnown.run(
             strategy: appIdStrategy,
-            autoTrustSSH: autoTrustSSH,
             port: port,
             entitlementsFile: entitlementsFile
         ) { exitCode in

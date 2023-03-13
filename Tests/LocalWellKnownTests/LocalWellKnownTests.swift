@@ -26,7 +26,11 @@ final class LocalWellKnownTests: XCTestCase {
         Current.shell.runAsyncStream = { [unowned self] command in
             self.commands.append(command)
             return .init {
-                try self.jsonEncoder.encode(LocalWellKnown.SSHResponse(address: URL(string: "com.blah")!))
+                try self.jsonEncoder.encode(
+                    LocalWellKnown.NgrokResponse(
+                        tunnels: [.init(publicUrl: XCTUnwrap(URL(string: "https://e315-47-208-216-108.ngrok.io")))]
+                    )
+                )
             }
         }
         Current.server.run = { [unowned self] port, tunnelHost, json in
@@ -46,7 +50,6 @@ final class LocalWellKnownTests: XCTestCase {
     func testManualStrategy() async throws {
         try await LocalWellKnown.run(
             strategy: .manual(appIds: ["com.1234"]),
-            autoTrustSSH: true,
             port: 8765,
             entitlementsFile: nil
         ) { _ in }
@@ -54,14 +57,15 @@ final class LocalWellKnownTests: XCTestCase {
         XCTAssertEqual(
             commands,
             [
-                "ps -o pid -o command | grep -E \'^\\s*\\d+ ssh -R 80:localhost:8765 localhost.run\' | awk \"{print \\$1}\" | xargs kill",
-                "ssh-keygen -F localhost.run || ssh-keyscan localhost.run >> ~/.ssh/known_hosts",
-                "ssh -R 80:localhost:8765 localhost.run -- --output json",
+                "pkill ngrok",
+                "which ngrok",
+                "ngrok http 8765",
+                "curl http://127.0.0.1:4040/api/tunnels --silent --max-time 0.1",
             ]
         )
-        XCTAssertEqual(output, ["Add com.blah to your app\'s entitlements file."])
+        XCTAssertEqual(output, ["Add e315-47-208-216-108.ngrok.io to your app\'s entitlements file."])
         XCTAssertEqual(port, 8765)
-        XCTAssertEqual(tunnelHost, "com.blah")
+        XCTAssertEqual(tunnelHost, "e315-47-208-216-108.ngrok.io")
         XCTAssertEqual(json, "{\"applinks\":{\"details\":[{\"appIds\":[\"com.1234\"]}]},\"webcredentials\":{\"apps\":[\"com.1234\"]},\"appclips\":{\"apps\":[\"com.1234\"]},\"activitycontinuation\":{\"apps\":[\"com.1234\"]}}")
     }
 
@@ -73,9 +77,8 @@ final class LocalWellKnownTests: XCTestCase {
                 .init()
         }
 
-        try await LocalWellKnown.run(
+        try! await LocalWellKnown.run(
             strategy: .project(file: "hello.xcodeproj", scheme: "ImAScheme"),
-            autoTrustSSH: true,
             port: 8765,
             entitlementsFile: "ImAScheme/ImAScheme.entitlements"
         ) { _ in }
@@ -83,19 +86,20 @@ final class LocalWellKnownTests: XCTestCase {
         XCTAssertEqual(
             commands,
             [
-                "ps -o pid -o command | grep -E \'^\\s*\\d+ ssh -R 80:localhost:8765 localhost.run\' | awk \"{print \\$1}\" | xargs kill",
-                "ssh-keygen -F localhost.run || ssh-keyscan localhost.run >> ~/.ssh/known_hosts",
-                "ssh -R 80:localhost:8765 localhost.run -- --output json",
-                "/usr/libexec/PlistBuddy -c \'set :com.apple.developer.associated-domains:0 applinks:com.blah\' ImAScheme/ImAScheme.entitlements || /usr/libexec/PlistBuddy -c \'add :com.apple.developer.associated-domains:0 string applinks:com.blah\' ImAScheme/ImAScheme.entitlements",
-                "/usr/libexec/PlistBuddy -c \'set :com.apple.developer.associated-domains:1 webcredentials:com.blah\' ImAScheme/ImAScheme.entitlements || /usr/libexec/PlistBuddy -c \'add :com.apple.developer.associated-domains:1 string webcredentials:com.blah\' ImAScheme/ImAScheme.entitlements",
-                "/usr/libexec/PlistBuddy -c \'set :com.apple.developer.associated-domains:2 appclips:com.blah\' ImAScheme/ImAScheme.entitlements || /usr/libexec/PlistBuddy -c \'add :com.apple.developer.associated-domains:2 string appclips:com.blah\' ImAScheme/ImAScheme.entitlements",
-                "/usr/libexec/PlistBuddy -c \'set :com.apple.developer.associated-domains:3 activitycontinuation:com.blah\' ImAScheme/ImAScheme.entitlements || /usr/libexec/PlistBuddy -c \'add :com.apple.developer.associated-domains:3 string activitycontinuation:com.blah\' ImAScheme/ImAScheme.entitlements",
+                "pkill ngrok",
+                "which ngrok",
+                "ngrok http 8765",
+                "curl http://127.0.0.1:4040/api/tunnels --silent --max-time 0.1",
+                "/usr/libexec/PlistBuddy -c \'set :com.apple.developer.associated-domains:0 applinks:e315-47-208-216-108.ngrok.io\' ImAScheme/ImAScheme.entitlements || /usr/libexec/PlistBuddy -c \'add :com.apple.developer.associated-domains:0 string applinks:e315-47-208-216-108.ngrok.io\' ImAScheme/ImAScheme.entitlements",
+                "/usr/libexec/PlistBuddy -c \'set :com.apple.developer.associated-domains:1 webcredentials:e315-47-208-216-108.ngrok.io\' ImAScheme/ImAScheme.entitlements || /usr/libexec/PlistBuddy -c \'add :com.apple.developer.associated-domains:1 string webcredentials:e315-47-208-216-108.ngrok.io\' ImAScheme/ImAScheme.entitlements",
+                "/usr/libexec/PlistBuddy -c \'set :com.apple.developer.associated-domains:2 appclips:e315-47-208-216-108.ngrok.io\' ImAScheme/ImAScheme.entitlements || /usr/libexec/PlistBuddy -c \'add :com.apple.developer.associated-domains:2 string appclips:e315-47-208-216-108.ngrok.io\' ImAScheme/ImAScheme.entitlements",
+                "/usr/libexec/PlistBuddy -c \'set :com.apple.developer.associated-domains:3 activitycontinuation:e315-47-208-216-108.ngrok.io\' ImAScheme/ImAScheme.entitlements || /usr/libexec/PlistBuddy -c \'add :com.apple.developer.associated-domains:3 string activitycontinuation:e315-47-208-216-108.ngrok.io\' ImAScheme/ImAScheme.entitlements",
                 "xcrun xcodebuild -quiet -showBuildSettings  -json -project \'hello.xcodeproj\' -scheme \'ImAScheme\' 2> /dev/null",
             ]
         )
         XCTAssertEqual(output, [])
         XCTAssertEqual(port, 8765)
-        XCTAssertEqual(tunnelHost, "com.blah")
+        XCTAssertEqual(tunnelHost, "e315-47-208-216-108.ngrok.io")
         XCTAssertEqual(json, "{\"applinks\":{\"details\":[{\"appIds\":[\"team123.com.bundle.example\"]}]},\"webcredentials\":{\"apps\":[\"team123.com.bundle.example\"]},\"appclips\":{\"apps\":[\"team123.com.bundle.example\"]},\"activitycontinuation\":{\"apps\":[\"team123.com.bundle.example\"]}}")
     }
 
@@ -110,7 +114,6 @@ final class LocalWellKnownTests: XCTestCase {
 
         try await LocalWellKnown.run(
             strategy: .workspace(file: "hello.xcworkspace", scheme: "ImAScheme"),
-            autoTrustSSH: false,
             port: 8765,
             entitlementsFile: "ImAScheme/ImAScheme.entitlements"
         ) { _ in }
@@ -118,26 +121,26 @@ final class LocalWellKnownTests: XCTestCase {
         XCTAssertEqual(
             commands,
             [
-                "ps -o pid -o command | grep -E \'^\\s*\\d+ ssh -R 80:localhost:8765 localhost.run\' | awk \"{print \\$1}\" | xargs kill",
-                "ssh-keygen -F localhost.run",
-                "ssh -R 80:localhost:8765 localhost.run -- --output json",
-                "/usr/libexec/PlistBuddy -c \'set :com.apple.developer.associated-domains:0 applinks:com.blah\' ImAScheme/ImAScheme.entitlements || /usr/libexec/PlistBuddy -c \'add :com.apple.developer.associated-domains:0 string applinks:com.blah\' ImAScheme/ImAScheme.entitlements",
-                "/usr/libexec/PlistBuddy -c \'set :com.apple.developer.associated-domains:1 webcredentials:com.blah\' ImAScheme/ImAScheme.entitlements || /usr/libexec/PlistBuddy -c \'add :com.apple.developer.associated-domains:1 string webcredentials:com.blah\' ImAScheme/ImAScheme.entitlements",
-                "/usr/libexec/PlistBuddy -c \'set :com.apple.developer.associated-domains:2 appclips:com.blah\' ImAScheme/ImAScheme.entitlements || /usr/libexec/PlistBuddy -c \'add :com.apple.developer.associated-domains:2 string appclips:com.blah\' ImAScheme/ImAScheme.entitlements",
-                "/usr/libexec/PlistBuddy -c \'set :com.apple.developer.associated-domains:3 activitycontinuation:com.blah\' ImAScheme/ImAScheme.entitlements || /usr/libexec/PlistBuddy -c \'add :com.apple.developer.associated-domains:3 string activitycontinuation:com.blah\' ImAScheme/ImAScheme.entitlements",
+                "pkill ngrok",
+                "which ngrok",
+                "ngrok http 8765",
+                "curl http://127.0.0.1:4040/api/tunnels --silent --max-time 0.1",
+                "/usr/libexec/PlistBuddy -c \'set :com.apple.developer.associated-domains:0 applinks:e315-47-208-216-108.ngrok.io\' ImAScheme/ImAScheme.entitlements || /usr/libexec/PlistBuddy -c \'add :com.apple.developer.associated-domains:0 string applinks:e315-47-208-216-108.ngrok.io\' ImAScheme/ImAScheme.entitlements",
+                "/usr/libexec/PlistBuddy -c \'set :com.apple.developer.associated-domains:1 webcredentials:e315-47-208-216-108.ngrok.io\' ImAScheme/ImAScheme.entitlements || /usr/libexec/PlistBuddy -c \'add :com.apple.developer.associated-domains:1 string webcredentials:e315-47-208-216-108.ngrok.io\' ImAScheme/ImAScheme.entitlements",
+                "/usr/libexec/PlistBuddy -c \'set :com.apple.developer.associated-domains:2 appclips:e315-47-208-216-108.ngrok.io\' ImAScheme/ImAScheme.entitlements || /usr/libexec/PlistBuddy -c \'add :com.apple.developer.associated-domains:2 string appclips:e315-47-208-216-108.ngrok.io\' ImAScheme/ImAScheme.entitlements",
+                "/usr/libexec/PlistBuddy -c \'set :com.apple.developer.associated-domains:3 activitycontinuation:e315-47-208-216-108.ngrok.io\' ImAScheme/ImAScheme.entitlements || /usr/libexec/PlistBuddy -c \'add :com.apple.developer.associated-domains:3 string activitycontinuation:e315-47-208-216-108.ngrok.io\' ImAScheme/ImAScheme.entitlements",
                 "xcrun xcodebuild -quiet -showBuildSettings  -json -workspace \'hello.xcworkspace\' -scheme \'ImAScheme\' 2> /dev/null",
             ]
         )
         XCTAssertEqual(output, [])
         XCTAssertEqual(port, 8765)
-        XCTAssertEqual(tunnelHost, "com.blah")
+        XCTAssertEqual(tunnelHost, "e315-47-208-216-108.ngrok.io")
         XCTAssertEqual(json, "{\"applinks\":{\"details\":[{\"appIds\":[\"team123.com.bundle.example\"]}]},\"webcredentials\":{\"apps\":[\"team123.com.bundle.example\"]},\"appclips\":{\"apps\":[\"team123.com.bundle.example\"]},\"activitycontinuation\":{\"apps\":[\"team123.com.bundle.example\"]}}")
     }
 
     func testJsonFileStrategy() async throws {
         try await LocalWellKnown.run(
             strategy: .json(file: "example.json"),
-            autoTrustSSH: true,
             port: 123,
             entitlementsFile: nil
         ) { _ in }
@@ -145,14 +148,15 @@ final class LocalWellKnownTests: XCTestCase {
         XCTAssertEqual(
             commands,
             [
-                "ps -o pid -o command | grep -E \'^\\s*\\d+ ssh -R 80:localhost:123 localhost.run\' | awk \"{print \\$1}\" | xargs kill",
-                "ssh-keygen -F localhost.run || ssh-keyscan localhost.run >> ~/.ssh/known_hosts",
-                "ssh -R 80:localhost:123 localhost.run -- --output json",
+                "pkill ngrok",
+                "which ngrok",
+                "ngrok http 123",
+                "curl http://127.0.0.1:4040/api/tunnels --silent --max-time 0.1",
             ]
         )
-        XCTAssertEqual(output, ["Add com.blah to your app\'s entitlements file."])
+        XCTAssertEqual(output, ["Add e315-47-208-216-108.ngrok.io to your app\'s entitlements file."])
         XCTAssertEqual(port, 123)
-        XCTAssertEqual(tunnelHost, "com.blah")
+        XCTAssertEqual(tunnelHost, "e315-47-208-216-108.ngrok.io")
         XCTAssertEqual(json, "{\"iamjson\":34}")
         XCTAssertEqual(file, "example.json")
     }
@@ -186,11 +190,5 @@ final class LocalWellKnownTests: XCTestCase {
         let command = try Runner.parseAsRoot(["--json-file", "blah.json", "--entitlements-file", "Blah.entitlements"]) as? Runner
         XCTAssertEqual(command?.jsonFile, "blah.json")
         XCTAssertEqual(command?.entitlementsFile, "Blah.entitlements")
-    }
-
-    func testNoAutoTrustParsing() throws {
-        let command = try Runner.parseAsRoot(["--json-file", "blah.json", "--no-auto-trust-ssh"]) as? Runner
-        XCTAssertEqual(command?.jsonFile, "blah.json")
-        XCTAssertEqual(command?.autoTrustSSH, false)
     }
 }
