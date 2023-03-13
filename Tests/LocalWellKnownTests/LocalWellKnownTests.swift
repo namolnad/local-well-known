@@ -62,7 +62,7 @@ final class LocalWellKnownTests: XCTestCase {
         XCTAssertEqual(output, ["Add com.blah to your app\'s entitlements file."])
         XCTAssertEqual(port, 8765)
         XCTAssertEqual(tunnelHost, "com.blah")
-        XCTAssertEqual(json, "{\"applinks\":[\"details\":[{\"appIds\":[\"com.1234\"]}],\"webcredentials\":{\"apps\":[\"com.1234\"]}")
+        XCTAssertEqual(json, "{\"applinks\":{\"details\":[{\"appIds\":[\"com.1234\"]}]},\"webcredentials\":{\"apps\":[\"com.1234\"]},\"appclips\":{\"apps\":[\"com.1234\"]},\"activitycontinuation\":{\"apps\":[\"com.1234\"]}}")
     }
 
     func testProjectFileStrategy() async throws {
@@ -88,13 +88,15 @@ final class LocalWellKnownTests: XCTestCase {
                 "ssh -R 80:localhost:8765 localhost.run -- --output json",
                 "/usr/libexec/PlistBuddy -c \'set :com.apple.developer.associated-domains:0 applinks:com.blah\' ImAScheme/ImAScheme.entitlements || /usr/libexec/PlistBuddy -c \'add :com.apple.developer.associated-domains:0 string applinks:com.blah\' ImAScheme/ImAScheme.entitlements",
                 "/usr/libexec/PlistBuddy -c \'set :com.apple.developer.associated-domains:1 webcredentials:com.blah\' ImAScheme/ImAScheme.entitlements || /usr/libexec/PlistBuddy -c \'add :com.apple.developer.associated-domains:1 string webcredentials:com.blah\' ImAScheme/ImAScheme.entitlements",
+                "/usr/libexec/PlistBuddy -c \'set :com.apple.developer.associated-domains:2 appclips:com.blah\' ImAScheme/ImAScheme.entitlements || /usr/libexec/PlistBuddy -c \'add :com.apple.developer.associated-domains:2 string appclips:com.blah\' ImAScheme/ImAScheme.entitlements",
+                "/usr/libexec/PlistBuddy -c \'set :com.apple.developer.associated-domains:3 activitycontinuation:com.blah\' ImAScheme/ImAScheme.entitlements || /usr/libexec/PlistBuddy -c \'add :com.apple.developer.associated-domains:3 string activitycontinuation:com.blah\' ImAScheme/ImAScheme.entitlements",
                 "xcrun xcodebuild -quiet -showBuildSettings  -json -project \'hello.xcodeproj\' -scheme \'ImAScheme\' 2> /dev/null",
             ]
         )
         XCTAssertEqual(output, [])
         XCTAssertEqual(port, 8765)
         XCTAssertEqual(tunnelHost, "com.blah")
-        XCTAssertEqual(json, "{\"applinks\":[\"details\":[{\"appIds\":[\"team123.com.bundle.example\"]}],\"webcredentials\":{\"apps\":[\"team123.com.bundle.example\"]}")
+        XCTAssertEqual(json, "{\"applinks\":{\"details\":[{\"appIds\":[\"team123.com.bundle.example\"]}]},\"webcredentials\":{\"apps\":[\"team123.com.bundle.example\"]},\"appclips\":{\"apps\":[\"team123.com.bundle.example\"]},\"activitycontinuation\":{\"apps\":[\"team123.com.bundle.example\"]}}")
     }
 
 
@@ -121,13 +123,15 @@ final class LocalWellKnownTests: XCTestCase {
                 "ssh -R 80:localhost:8765 localhost.run -- --output json",
                 "/usr/libexec/PlistBuddy -c \'set :com.apple.developer.associated-domains:0 applinks:com.blah\' ImAScheme/ImAScheme.entitlements || /usr/libexec/PlistBuddy -c \'add :com.apple.developer.associated-domains:0 string applinks:com.blah\' ImAScheme/ImAScheme.entitlements",
                 "/usr/libexec/PlistBuddy -c \'set :com.apple.developer.associated-domains:1 webcredentials:com.blah\' ImAScheme/ImAScheme.entitlements || /usr/libexec/PlistBuddy -c \'add :com.apple.developer.associated-domains:1 string webcredentials:com.blah\' ImAScheme/ImAScheme.entitlements",
+                "/usr/libexec/PlistBuddy -c \'set :com.apple.developer.associated-domains:2 appclips:com.blah\' ImAScheme/ImAScheme.entitlements || /usr/libexec/PlistBuddy -c \'add :com.apple.developer.associated-domains:2 string appclips:com.blah\' ImAScheme/ImAScheme.entitlements",
+                "/usr/libexec/PlistBuddy -c \'set :com.apple.developer.associated-domains:3 activitycontinuation:com.blah\' ImAScheme/ImAScheme.entitlements || /usr/libexec/PlistBuddy -c \'add :com.apple.developer.associated-domains:3 string activitycontinuation:com.blah\' ImAScheme/ImAScheme.entitlements",
                 "xcrun xcodebuild -quiet -showBuildSettings  -json -workspace \'hello.xcworkspace\' -scheme \'ImAScheme\' 2> /dev/null",
             ]
         )
         XCTAssertEqual(output, [])
         XCTAssertEqual(port, 8765)
         XCTAssertEqual(tunnelHost, "com.blah")
-        XCTAssertEqual(json, "{\"applinks\":[\"details\":[{\"appIds\":[\"team123.com.bundle.example\"]}],\"webcredentials\":{\"apps\":[\"team123.com.bundle.example\"]}")
+        XCTAssertEqual(json, "{\"applinks\":{\"details\":[{\"appIds\":[\"team123.com.bundle.example\"]}]},\"webcredentials\":{\"apps\":[\"team123.com.bundle.example\"]},\"appclips\":{\"apps\":[\"team123.com.bundle.example\"]},\"activitycontinuation\":{\"apps\":[\"team123.com.bundle.example\"]}}")
     }
 
     func testJsonFileStrategy() async throws {

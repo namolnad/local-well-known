@@ -84,7 +84,7 @@ enum LocalWellKnown {
     }
 
     private static func makeJson(appIds: [String]) -> String {
-        "{\"applinks\":{\"details\":[{\"appIds\":\(appIds)}],\"webcredentials\":{\"apps\":\(appIds)},\"appclips\":{\"apps\":\(appIds)},\"activitycontinuation\":{\"apps\":\(appIds)}}}"
+        "{\"applinks\":{\"details\":[{\"appIds\":\(appIds)}]},\"webcredentials\":{\"apps\":\(appIds)},\"appclips\":{\"apps\":\(appIds)},\"activitycontinuation\":{\"apps\":\(appIds)}}"
     }
 
     private static func cleanUpSSH(command: String) {
