@@ -14,7 +14,7 @@ extension Server {
             return nil
         }
 
-        server.notFoundHandler = { _ in .movedPermanently("https://example.com/404") }
+        server.GET["/"] = { _ in .ok(.htmlBody("Hello, World!")) }
 
         server.GET["/apple-app-site-association", "/.well-known/apple-app-site-association"] = { _ in
             .ok(.text(json))
