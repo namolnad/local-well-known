@@ -17,7 +17,7 @@ extension Server {
         server.GET["/"] = { _ in .ok(.htmlBody("Hello, World!")) }
 
         server.GET["/apple-app-site-association", "/.well-known/apple-app-site-association"] = { _ in
-            .ok(.text(json))
+            .ok(.data(Data(json.utf8), contentType: "application/json"))
         }
 
         let semaphore = DispatchSemaphore(value: 0)
