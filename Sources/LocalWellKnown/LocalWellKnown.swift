@@ -59,7 +59,7 @@ enum LocalWellKnown {
         else { throw ExitCode.failure }
 
         if let entitlementsFile {
-            try ["applinks", "webcredentials"].enumerated().forEach { index, entitlement in
+            try ["applinks", "webcredentials", "appclips", "activitycontinuation"].enumerated().forEach { index, entitlement in
                 let makeCommand: (String, String?) -> String = { command, type in
                     "/usr/libexec/PlistBuddy -c '\(command) :com.apple.developer.associated-domains:\(index) \(type.map { $0 + " " } ?? "")\(entitlement):\(domain)' \(entitlementsFile)"
                 }
@@ -95,7 +95,7 @@ enum LocalWellKnown {
     }
 
     private static func makeJson(appIds: [String]) -> String {
-        "{\"applinks\":{\"details\":[{\"appIds\":\(appIds)}],\"webcredentials\":{\"apps\":\(appIds)}}}"
+        "{\"applinks\":{\"details\":[{\"appIds\":\(appIds)}],\"webcredentials\":{\"apps\":\(appIds)},\"appclips\":{\"apps\":\(appIds)},\"activitycontinuation\":{\"apps\":\(appIds)}}}"
     }
 
     private static func cleanUpNgrok() {
